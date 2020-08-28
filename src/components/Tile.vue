@@ -11,6 +11,7 @@ export default {
   data() {
     return {
       show: false,
+      hasWon: false,
     };
   },
   methods: {
@@ -19,6 +20,9 @@ export default {
       this.$emit('clicked', this);
     },
     src() {
+      if (this.hasWon) {
+        return require('../assets/' + this.picId + '.png');
+      }
       return this.show
         ? require('../assets/' + this.picId + '.png')
         : require('../assets/back.png');

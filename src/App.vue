@@ -24,7 +24,7 @@ export default {
   data() {
     return {
       tileOpened: [],
-      items: this.shuffle([1, 1, 2, 2, 3, 3, 4, 4, 5, 5 ]),
+      items: this.shuffle([1, 1, 2, 2, 3, 3, 4, 4, 5, 5]),
       isLoading: false,
     };
   },
@@ -58,8 +58,9 @@ export default {
         tile.picId === this.tileOpened[0].picId &&
         tile._uid !== this.tileOpened[0]._uid
       ) {
-        this.items = this.items.filter(function (obj) {
-          return obj !== tile.picId;
+        this.tileOpened.forEach((t) => {
+          t.hasWon = true;
+          t.show = true;
         });
       }
     },
