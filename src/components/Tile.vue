@@ -7,6 +7,7 @@ export default {
   name: 'Tile',
   props: {
       picId: Number,
+      id: Number,
   },
   data() {
     return {
@@ -23,6 +24,7 @@ export default {
       if (this.hasWon) {
         return require('../assets/' + this.picId + '.png');
       }
+      
       return this.show
         ? require('../assets/' + this.picId + '.png')
         : require('../assets/back.png');

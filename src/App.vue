@@ -4,7 +4,7 @@
       <div class="board">
         <Loading v-if="isLoading"></Loading>
         <div v-for="(item, index) in items" :key="index" class="border-holder">
-          <Tile :picId="item" @clicked="tileClicked" />
+          <Tile :picId="item" :id="index" @clicked="tileClicked" ref="items" />
         </div>
       </div>
     </div>
@@ -24,46 +24,77 @@ export default {
   data() {
     return {
       tileOpened: [],
-      items: this.shuffle([1, 1, 2, 2, 3, 3, 4, 4, 5, 5]),
       isLoading: false,
+      items: [],
+      chatSocket: null,
     };
   },
   methods: {
     tileClicked(tile) {
       this.tileOpened.push(tile);
+      this.chatSocket.send(
+        JSON.stringify({ tileOpened: this.tileOpened.map((t) => t.id) })
+      );
       if (this.tileOpened.length >= 2) {
         this.isLoading = true;
         setTimeout(() => {
-          this.duringTimeout(tile);
+          this.duringTimeout();
         }, 2000);
       }
     },
-    shuffle(a) {
-      for (let i = a.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [a[i], a[j]] = [a[j], a[i]];
-      }
-      return a;
-    },
-    duringTimeout(tile) {
-      this.tileOpened.forEach((t) => {
+    duringTimeout() {
+      this.$refs.items.forEach((t) => {
         t.show = false;
       });
       this.isLoading = false;
-      this.hasWon(tile);
+      this.hasWon();
       this.tileOpened = [];
+      this.chatSocket.send(JSON.stringify({ tileOpened: this.tileOpened }));
     },
-    hasWon(tile) {
+    hasWon() {
       if (
-        tile.picId === this.tileOpened[0].picId &&
-        tile._uid !== this.tileOpened[0]._uid
+        this.tileOpened[0].picId === this.tileOpened[1].picId &&
+        this.tileOpened[0].id !== this.tileOpened[1].id
       ) {
-        this.tileOpened.forEach((t) => {
-          t.hasWon = true;
-          t.show = true;
+        this.$refs.items.forEach((t) => {
+          if (t.picId === this.tileOpened[0].picId) {
+            t.hasWon = true;
+            t.show = true;
+          }
         });
       }
     },
+  },
+  mounted() {
+    this.chatSocket = new WebSocket(
+      'ws://' + '127.0.0.1:8000' + '/ws/chat/' + 'myroom' + '/'
+    );
+
+    this.chatSocket.onmessage = (e) => {
+      const data = JSON.parse(e.data);
+      if (data.items) {
+        this.items = data.items;
+      }
+      if (data.tile_opened) {
+        const arr = data.tile_opened;
+        const opened = [];
+        arr.forEach((x) => {
+          opened.push(this.$refs.items.find((t) => t.id === x));
+        });
+        // opened.forEach((element) => {
+        //   element.show = true;
+        // });
+        // setTimeout(() => {
+        //   opened.forEach((element) => {
+        //     this.hasWon(element);
+        //   });
+        // }, 3000);
+      }
+    };
+
+    this.chatSocket.onclose = () => {
+      console.error('Chat socket closed unexpectedly');
+    };
   },
 };
 </script>
