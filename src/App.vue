@@ -12,6 +12,7 @@
 </template>
 
 <script>
+/* eslint-disable */
 import Tile from './components/Tile.vue';
 import Loading from './components/Loading.vue';
 
@@ -36,22 +37,21 @@ export default {
         JSON.stringify({ tileOpened: this.tileOpened.map((t) => t.id) })
       );
       if (this.tileOpened.length >= 2) {
-        this.isLoading = true;
-        setTimeout(() => {
-          this.duringTimeout();
-        }, 2000);
+        this.duringTimeout();
       }
     },
     duringTimeout() {
-      this.$refs.items.forEach((t) => {
-        t.show = false;
-      });
-      this.isLoading = false;
-      this.hasWon();
-      this.tileOpened = [];
-      this.chatSocket.send(JSON.stringify({ tileOpened: this.tileOpened }));
+      this.isLoading = true;
+      setTimeout(() => {
+        this.$refs.items.forEach((t) => {
+          t.show = false;
+        });
+        this.isLoading = false;
+        this.checkWin();
+        this.tileOpened = [];
+      }, 2000);
     },
-    hasWon() {
+    checkWin() {
       if (
         this.tileOpened[0].picId === this.tileOpened[1].picId &&
         this.tileOpened[0].id !== this.tileOpened[1].id
@@ -76,19 +76,38 @@ export default {
         this.items = data.items;
       }
       if (data.tile_opened) {
-        const arr = data.tile_opened;
-        const opened = [];
-        arr.forEach((x) => {
-          opened.push(this.$refs.items.find((t) => t.id === x));
-        });
-        // opened.forEach((element) => {
-        //   element.show = true;
-        // });
-        // setTimeout(() => {
-        //   opened.forEach((element) => {
-        //     this.hasWon(element);
-        //   });
-        // }, 3000);
+        const tiles = data.tile_opened;
+        if (tiles.length >= 2) {
+          this.$refs.items.forEach((t) => {
+            if (t.id === tiles[0] || t.id === tiles[1]) {
+              t.show = true;
+            }
+          });
+
+          this.isLoading = true;
+          setTimeout(() => {
+            this.$refs.items.forEach((t) => {
+              t.show = false;
+            });
+            this.isLoading = false;
+            if (
+              this.$refs.items.find((i) => i.id === tiles[0]).picId ===
+                this.$refs.items.find((i) => i.id === tiles[1]).picId &&
+              tiles[0] !== tiles[1]
+            ) {
+              this.$refs.items.forEach((t) => {
+                if (
+                  t.picId ===
+                  this.$refs.items.find((i) => i.id === tiles[0]).picId
+                ) {
+                  t.hasWon = true;
+                  t.show = true;
+                }
+              });
+            }
+            this.tileOpened = [];
+          }, 2000);
+        }
       }
     };
 
