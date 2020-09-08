@@ -16,6 +16,8 @@
 import Tile from './components/Tile.vue';
 import Loading from './components/Loading.vue';
 
+const TILE_TIMEOUT = 2000;
+
 export default {
   name: 'App',
   components: {
@@ -49,7 +51,7 @@ export default {
         this.isLoading = false;
         this.checkWin();
         this.tileOpened = [];
-      }, 2000);
+      }, TILE_TIMEOUT);
     },
     checkWin() {
       if (
@@ -67,6 +69,50 @@ export default {
         );
       }
     },
+    setOpenedTiles(tile_opened) {
+      const tiles = tile_opened;
+      if (tiles.length >= 2) {
+        this.$refs.items.forEach((t) => {
+          if (t.id === tiles[0] || t.id === tiles[1]) {
+            t.show = true;
+          }
+        });
+
+        this.isLoading = true;
+        setTimeout(() => {
+          this.$refs.items.forEach((t) => {
+            t.show = false;
+          });
+          this.isLoading = false;
+          if (
+            this.$refs.items.find((i) => i.id === tiles[0]).picId ===
+              this.$refs.items.find((i) => i.id === tiles[1]).picId &&
+            tiles[0] !== tiles[1]
+          ) {
+            this.$refs.items.forEach((t) => {
+              if (
+                t.picId ===
+                this.$refs.items.find((i) => i.id === tiles[0]).picId
+              ) {
+                t.hasWon = true;
+                t.show = true;
+              }
+            });
+          }
+          this.tileOpened = [];
+        }, TILE_TIMEOUT);
+      }
+    },
+    setTileWon(tilewon) {
+      this.$nextTick(() => {
+          let self = this;
+          tilewon.forEach((w) => {
+            const won = self.$refs.items.find((i) => i.id === w);
+            won.hasWon = true;
+            won.show = true;
+          });
+        });
+    },
   },
   mounted() {
     this.chatSocket = new WebSocket(
@@ -79,48 +125,10 @@ export default {
         this.items = data.items;
       }
       if (data.tile_won) {
-        this.$nextTick(() => {
-          let self = this;
-          data.tile_won.forEach((w) => {
-            const won = self.$refs.items.find((i) => i.id === w);
-            won.hasWon = true;
-            won.show = true;
-          });
-        });
+        this.setTileWon(data.tile_won);
       }
       if (data.tile_opened) {
-        const tiles = data.tile_opened;
-        if (tiles.length >= 2) {
-          this.$refs.items.forEach((t) => {
-            if (t.id === tiles[0] || t.id === tiles[1]) {
-              t.show = true;
-            }
-          });
-
-          this.isLoading = true;
-          setTimeout(() => {
-            this.$refs.items.forEach((t) => {
-              t.show = false;
-            });
-            this.isLoading = false;
-            if (
-              this.$refs.items.find((i) => i.id === tiles[0]).picId ===
-                this.$refs.items.find((i) => i.id === tiles[1]).picId &&
-              tiles[0] !== tiles[1]
-            ) {
-              this.$refs.items.forEach((t) => {
-                if (
-                  t.picId ===
-                  this.$refs.items.find((i) => i.id === tiles[0]).picId
-                ) {
-                  t.hasWon = true;
-                  t.show = true;
-                }
-              });
-            }
-            this.tileOpened = [];
-          }, 2000);
-        }
+        this.setOpenedTiles(data.tile_opened);
       }
     };
 
