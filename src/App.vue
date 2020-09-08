@@ -45,10 +45,7 @@ export default {
     duringTimeout() {
       this.isLoading = true;
       setTimeout(() => {
-        this.$refs.items.forEach((t) => {
-          t.show = false;
-        });
-        this.isLoading = false;
+        this.showAllTiles();
         this.checkWin();
         this.tileOpened = [];
       }, TILE_TIMEOUT);
@@ -69,31 +66,25 @@ export default {
         );
       }
     },
-    setOpenedTiles(tile_opened) {
-      const tiles = tile_opened;
+    setOpenedTiles(tiles) {
       if (tiles.length >= 2) {
         this.$refs.items.forEach((t) => {
           if (t.id === tiles[0] || t.id === tiles[1]) {
             t.show = true;
           }
         });
-
         this.isLoading = true;
+
         setTimeout(() => {
-          this.$refs.items.forEach((t) => {
-            t.show = false;
-          });
-          this.isLoading = false;
+          this.showAllTiles();
+          const tileCompare1 = this.$refs.items.find((i) => i.id === tiles[0]);
+          const tileCompare2 = this.$refs.items.find((i) => i.id === tiles[1]);
           if (
-            this.$refs.items.find((i) => i.id === tiles[0]).picId ===
-              this.$refs.items.find((i) => i.id === tiles[1]).picId &&
+            tileCompare1.picId === tileCompare2.picId &&
             tiles[0] !== tiles[1]
           ) {
             this.$refs.items.forEach((t) => {
-              if (
-                t.picId ===
-                this.$refs.items.find((i) => i.id === tiles[0]).picId
-              ) {
+              if (t.picId === tileCompare1.picId) {
                 t.hasWon = true;
                 t.show = true;
               }
@@ -105,13 +96,19 @@ export default {
     },
     setTileWon(tilewon) {
       this.$nextTick(() => {
-          let self = this;
-          tilewon.forEach((w) => {
-            const won = self.$refs.items.find((i) => i.id === w);
-            won.hasWon = true;
-            won.show = true;
-          });
+        let self = this;
+        tilewon.forEach((w) => {
+          const won = self.$refs.items.find((i) => i.id === w);
+          won.hasWon = true;
+          won.show = true;
         });
+      });
+    },
+    showAllTiles() {
+      this.$refs.items.forEach((t) => {
+        t.show = false;
+      });
+      this.isLoading = false;
     },
   },
   mounted() {
