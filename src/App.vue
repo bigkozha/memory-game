@@ -12,11 +12,11 @@
 </template>
 
 <script>
-/* eslint-disable */
 import Tile from './components/Tile.vue';
 import Loading from './components/Loading.vue';
 
 const TILE_TIMEOUT = 2000;
+const SERVER_ADDRESS = '127.0.0.1:8000';
 
 export default {
   name: 'App',
@@ -68,23 +68,25 @@ export default {
     },
     setOpenedTiles(tiles) {
       if (tiles.length >= 2) {
-        this.$refs.items.forEach((t) => {
-          if (t.id === tiles[0] || t.id === tiles[1]) {
-            t.show = true;
-          }
+        const localItems = this.$refs.items.filter(
+          (i) => i.id === tiles[0] || i.id === tiles[1]
+        );
+
+        localItems.forEach((t) => {
+          t.show = true;
         });
+
         this.isLoading = true;
 
         setTimeout(() => {
           this.showAllTiles();
-          const tileCompare1 = this.$refs.items.find((i) => i.id === tiles[0]);
-          const tileCompare2 = this.$refs.items.find((i) => i.id === tiles[1]);
+
           if (
-            tileCompare1.picId === tileCompare2.picId &&
+            localItems[0].picId === localItems[1].picId &&
             tiles[0] !== tiles[1]
           ) {
             this.$refs.items.forEach((t) => {
-              if (t.picId === tileCompare1.picId) {
+              if (t.picId === localItems[0].picId) {
                 t.hasWon = true;
                 t.show = true;
               }
@@ -113,7 +115,7 @@ export default {
   },
   mounted() {
     this.chatSocket = new WebSocket(
-      'ws://' + '127.0.0.1:8000' + '/ws/chat/' + 'myroom' + '/'
+      'ws://' + SERVER_ADDRESS + '/ws/game/' + 'myroom' + '/'
     );
 
     this.chatSocket.onmessage = (e) => {
@@ -138,15 +140,8 @@ export default {
 
 <style>
 #app {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
   text-align: center;
-  color: #2c3e50;
   margin-top: 10%;
-}
-* {
-  box-sizing: border-box;
 }
 
 .center-area {
@@ -166,10 +161,5 @@ export default {
   .board {
     height: 90vmin;
   }
-}
-
-.cell-content-empty {
-  width: 100%;
-  height: 100%;
 }
 </style>
