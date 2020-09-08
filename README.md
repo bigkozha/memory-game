@@ -1,4 +1,4 @@
-# todelete
+# memory-game
 
 ## Project setup
 ```
