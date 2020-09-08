@@ -62,6 +62,9 @@ export default {
             t.show = true;
           }
         });
+        this.chatSocket.send(
+          JSON.stringify({ tile_won: this.tileOpened.map((t) => t.id) })
+        );
       }
     },
   },
@@ -74,6 +77,16 @@ export default {
       const data = JSON.parse(e.data);
       if (data.items) {
         this.items = data.items;
+      }
+      if (data.tile_won) {
+        this.$nextTick(() => {
+          let self = this;
+          data.tile_won.forEach((w) => {
+            const won = self.$refs.items.find((i) => i.id === w);
+            won.hasWon = true;
+            won.show = true;
+          });
+        });
       }
       if (data.tile_opened) {
         const tiles = data.tile_opened;
